@@ -8,7 +8,7 @@ Runs python3 -m http.server 8000 via systemd and serves files from the project f
 client.local — 192.168.56.11
 Has curl installed for testing the server.
 
-use comment: `vagrant up` 
+use comment: `vagrant up` \
 Result:
 ```
 Bringing machine 'server' up with 'virtualbox' provider...
