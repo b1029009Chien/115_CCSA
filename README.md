@@ -1,8 +1,8 @@
-### this is NYCU AI CCSA
+# this is NYCU AI CCSA
 
 Here is just make a record
 
-## Homework 2: Create a Client-Server Application using VirtualBox and Vagrant
+### Homework 2: Create a Client-Server Application using VirtualBox and Vagrant
 
 Objective
 
@@ -59,7 +59,7 @@ Submit a single compressed folder containing:
    * Screenshots/logs showing a successful client request to the server.
 
 
-## Homework 3: Create a 3-Tier Web Application with Docker Compose
+### Homework 3: Create a 3-Tier Web Application with Docker Compose
 - Objective
     * You are tasked with building a 3-tier web application using Docker Compose. 
 The application will allow users to perform the following actions via a web 
