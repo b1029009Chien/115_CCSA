@@ -8,7 +8,7 @@
 - 資料庫：SQLite
 
 ## 如何執行
-請參考 `QUICKSTART.md`。
+請參考 [`QUICKSTART.md`](./QUICKSTART.md)。
 
 ## 如何測試
 1. 進入 backend 容器：`docker compose exec backend bash`
@@ -21,4 +21,4 @@
 
 ---
 
-MIT License
+[MIT License](./LICENSE)
