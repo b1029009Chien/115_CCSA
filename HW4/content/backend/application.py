@@ -3,24 +3,26 @@ from flask import Flask, request, jsonify
 from sqlalchemy import create_engine, text
 from sqlalchemy.pool import QueuePool
 
-DB_USER = os.getenv("POSTGRES_USER", "postgres")
-DB_PASS = os.getenv("POSTGRES_PASSWORD", "postgres")
-DB_HOST = os.getenv("POSTGRES_HOST", "db")
-DB_PORT = os.getenv("POSTGRES_PORT", "5432")
-DB_NAME = os.getenv("POSTGRES_DB", "postgres")
-
-DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+DATABASE_URL = "sqlite:///./names.db"
 
 engine = create_engine(
     DATABASE_URL,
-    poolclass=QueuePool,
-    pool_pre_ping=True,
-    pool_size=5,
-    max_overflow=10,
+    connect_args={"check_same_thread": False},
     future=True,
 )
 
 app = Flask(__name__)
+
+def init_db():
+    with engine.begin() as conn:
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS names (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """))
+init_db()
 
 @app.get("/api/health")
 def health():
