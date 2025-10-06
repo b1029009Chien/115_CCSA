@@ -8,6 +8,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY application.py .
+COPY tests/ ./tests/
 
 # Gunicorn binds 0.0.0.0:8000
 ENV PYTHONUNBUFFERED=1
