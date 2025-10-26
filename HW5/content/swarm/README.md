@@ -1,3 +1,75 @@
+Swarm usage notes for HW5 (Speckit)
+
+This README explains how to pin the Postgres DB to a specific worker using a node label and how to prepare the worker host directory used by the `pgdata` bind mount. The stack file `HW5/content/swarm/stack.yml` expects the DB service to be scheduled on nodes with the label `db=true`.
+
+1) Find the worker node name
+
+Run on a manager:
+
+```bash
+docker node ls
+```
+
+Locate the worker node name (HOSTNAME / NAME column).
+
+2) Label the worker node for DB
+
+Run on a manager (replace `<worker-node>`):
+
+```bash
+# add label 'db=true' to the desired worker
+docker node update --label-add db=true <worker-node>
+
+# verify the label was applied
+docker node inspect <worker-node> --format '{{json .Spec.Labels}}' | jq
+```
+
+3) Prepare the host directory for Postgres data (on the worker)
+
+The stack uses a host bind to `/var/lib/postgres-data` on the node that runs the DB. Create and secure that directory on the labeled worker:
+
+```bash
+# on the worker node
+sudo mkdir -p /var/lib/postgres-data
+# set ownership to Postgres UID (official image commonly uses 999)
+sudo chown -R 999:999 /var/lib/postgres-data
+sudo chmod 700 /var/lib/postgres-data
+```
+
+If your Postgres image uses a different UID/GID, adjust the chown command accordingly.
+
+4) Deploy / update the stack
+
+From a manager or any machine with Docker configured to the manager:
+
+```bash
+docker stack deploy -c HW5/content/swarm/stack.yml speckit
+
+# or to force rescheduling of only the db service:
+docker service update --force speckit_db
+```
+
+5) Verify the DB is running on the labeled worker
+
+```bash
+docker service ps speckit_db
+```
+
+Expected: the NODE column for the `speckit_db` tasks shows the labeled worker node.
+
+Notes
+
+- Host bind mounts tie data to the filesystem of the worker. If you move the DB task to another node that doesn't have the same path, data won't be present. Use shared storage for HA.
+- To remove the label later:
+
+```bash
+docker node update --label-rm db <worker-node>
+```
+
+Questions or next steps
+
+- I can update the stack to use a cluster volume driver (NFS/Longhorn) instead of a host bind if you want the DB to be movable between nodes.
+- I can also add a small script to automate the label & prepare steps.
 Swarm deployment for MC App
 ===========================
 
