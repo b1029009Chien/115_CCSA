@@ -1,0 +1,15 @@
+name: plan handler
+
+on:
+  repository_dispatch:
+    types: [plan]
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show payload
+        run: |
+          echo "plan command received"
+          echo "Event payload:"
+          echo "${{ toJson(github.event) }}"

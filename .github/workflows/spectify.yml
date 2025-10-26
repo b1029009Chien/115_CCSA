@@ -1,0 +1,15 @@
+name: spectify handler
+
+on:
+  repository_dispatch:
+    types: [spectify]
+
+jobs:
+  spectify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show payload
+        run: |
+          echo "spectify command received"
+          echo "Event payload:"
+          echo "${{ toJson(github.event) }}"

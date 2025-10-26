@@ -1,0 +1,15 @@
+name: tasks handler
+
+on:
+  repository_dispatch:
+    types: [tasks]
+
+jobs:
+  tasks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show payload
+        run: |
+          echo "tasks command received"
+          echo "Event payload:"
+          echo "${{ toJson(github.event) }}"

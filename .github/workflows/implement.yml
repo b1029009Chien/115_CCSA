@@ -1,0 +1,15 @@
+name: implement handler
+
+on:
+  repository_dispatch:
+    types: [implement]
+
+jobs:
+  implement:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show payload
+        run: |
+          echo "implement command received"
+          echo "Event payload:"
+          echo "${{ toJson(github.event) }}"

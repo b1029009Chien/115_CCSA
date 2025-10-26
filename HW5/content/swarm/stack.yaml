@@ -1,0 +1,71 @@
+version: "3.8"
+
+services:
+  api:
+    image: docker.io/chien/hw5-api:latest
+    environment:
+      # Compatibility: application expects POSTGRES_* env vars. Provide both sets.
+      POSTGRES_USER: postgres
+      # read password from Docker secret file
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_HOST: 140.113.110.77
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: appdb
+      # Keep DATABASE_* vars too for clarity
+      DATABASE_HOST: 140.113.110.77
+      DATABASE_NAME: appdb
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD_FILE: /run/secrets/db_password
+      DATABASE_URL: postgresql://postgres@140.113.110.77:5432/appdb
+    secrets:
+      - db_password
+    networks:
+      - appnet
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+    healthcheck:
+      # API is expected to expose /healthz returning {"status":"ok"}
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    image: docker.io/chien/hw5-web:latest
+    ports:
+      - "80:80"
+    networks:
+      - appnet
+    depends_on:
+      - api
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+
+networks:
+  appnet:
+    driver: overlay
+
+volumes:
+  # Bind this volume to the lab node path /var/lib/postgres-data.
+  dbdata:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/postgres-data
+
+secrets:
+  # Create this secret on the manager before deploying:
+  # echo "your-db-password" | docker secret create db_password -
+  db_password:
+    external: true
