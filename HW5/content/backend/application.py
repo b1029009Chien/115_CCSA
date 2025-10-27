@@ -4,12 +4,13 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.pool import QueuePool
 
 DB_USER = os.getenv("POSTGRES_USER", "postgres")
-DB_PASS = os.getenv("POSTGRES_PASSWORD", "postgres")
+DB_PASS = "password"  # Using fixed password for simplicity
 DB_HOST = os.getenv("POSTGRES_HOST", "db")
 DB_PORT = os.getenv("POSTGRES_PORT", "5432")
-DB_NAME = os.getenv("POSTGRES_DB", "postgres")
+DB_NAME = os.getenv("POSTGRES_DB", "appdb")
 
 DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+print(f"Using database URL: {DATABASE_URL}")
 
 engine = create_engine(
     DATABASE_URL,
@@ -21,6 +22,17 @@ engine = create_engine(
 )
 
 app = Flask(__name__)
+
+
+@app.route('/healthz')
+def health_check():
+    try:
+        # Verify database connection
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return jsonify({"status": "healthy", "database": "connected"}), 200
+    except Exception as e:
+        return jsonify({"status": "unhealthy", "database": str(e)}), 500
 
 
 def ensure_schema(retries: int = 6, delay: float = 2.0) -> None:
