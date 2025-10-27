@@ -20,15 +20,32 @@ Notes:
 - If you'd like the workflows to post the AI-generated contents automatically as a comment, we can extend the workflows to call the prompt engine and post the reply.
 
 How to use ops?
+
 Make the scripts executable:
+
 `chmod +x ops/*.sh`
+
+
 Initialize swarm (on a manager) and optionally label the node for DB:
+
 `ops/init-swarm.sh --label-db`
+
+
 Deploy:
+
 `ops/deploy.sh`
+
+
 or to build/push images first:
+
 `ops/deploy.sh --build`
+
+
 Verify (adjust host if accessing remotely):
+
 `ops/verify.sh 100.109.55.80 80`
+
+
 Cleanup when done:
+
 `HW5/ops/cleanup.sh --remove-volumes`
