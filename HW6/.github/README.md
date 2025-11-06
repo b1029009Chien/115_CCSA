@@ -228,10 +228,3 @@ curl -v http://localhost:8000/healthz
 Why `curl http://localhost:8000/healthz` failed earlier
 - If you ran `kubectl port-forward` and immediately attempted curl, the API process inside the pod may not yet have started or may have been refusing DB-dependent requests — so the socket was closed and curl logged "Connection refused".
 - Port-forward maps your local port to the remote target, but it does not make the remote process start or become ready — that's the container's job. If the container isn't listening on that port (or if it immediately closes connections because of DB errors), you'll see connection refused.
-
-Longer-term fixes (recommended)
-- Add an `init.sql` Job (or mount the init SQL into `/docker-entrypoint-initdb.d/` on first init) so DB schema is created automatically.
-- Add `readinessProbe` to the `api` deployment that checks a simple DB-free health check or a DB ping; that prevents the Service receiving traffic until the app is ready.
-- Convert the DB `Deployment` to a `StatefulSet` and provide stable storage/identity if you need production-like guarantees.
-
-If you want, I can add a small Kubernetes Job manifest to `HW6/content/k8s/` that runs `init.sql` once and then exits; or add a script that runs the `kubectl cp` + `psql` commands for you. Which would you prefer?
