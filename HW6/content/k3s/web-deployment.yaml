@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: hw6
+  labels:
+    app: hw6
+    component: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hw6
+      component: web
+  template:
+    metadata:
+      labels:
+        app: hw6
+        component: web
+    spec:
+      containers:
+      - name: web
+        image: chien314832001/hw5_web:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: default.conf
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: web-nginx-config
+          items:
+          - key: default.conf
+            path: default.conf

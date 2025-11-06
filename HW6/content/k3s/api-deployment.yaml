@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: hw6
+  labels:
+    app: hw6
+    component: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hw6
+      component: api
+  template:
+    metadata:
+      labels:
+        app: hw6
+        component: api
+    spec:
+      containers:
+      - name: api
+        image: chien314832001/hw5_api:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+        env:
+        - name: POSTGRES_USER
+          value: "postgres"
+        - name: POSTGRES_PASSWORD
+          value: "password"
+        - name: POSTGRES_HOST
+          value: "db"
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_DB
+          value: "appdb"
+        - name: DATABASE_HOST
+          value: "db"
+        - name: DATABASE_NAME
+          value: "appdb"
+        - name: DATABASE_USER
+          value: "postgres"
+        - name: DATABASE_PASSWORD
+          value: "password"
+        - name: DATABASE_URL
+          value: "postgresql://postgres:password@db:5432/appdb"

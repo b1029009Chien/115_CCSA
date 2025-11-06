@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+  namespace: hw6
+  labels:
+    app: hw6
+    component: db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hw6
+      component: db
+  template:
+    metadata:
+      labels:
+        app: hw6
+        component: db
+    spec:
+      # Schedule Postgres on the lab node which should have the label `role: db`
+      nodeSelector:
+        role: db
+      containers:
+      - name: postgres
+        image: postgres:16
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          value: "postgres"
+        - name: POSTGRES_PASSWORD
+          value: "password"
+        - name: POSTGRES_DB
+          value: "appdb"
+        volumeMounts:
+        - name: dbdata
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: dbdata
+        persistentVolumeClaim:
+          claimName: db-pvc
