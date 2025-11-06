@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CCSA HW3</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font: 16px system-ui, sans-serif; margin: 2rem; }
+    form, ul { max-width: 520px; }
+    input { padding: 0.5rem; width: 100%; max-width: 360px; }
+    button { padding: 0.5rem 0.8rem; margin-left: 0.5rem; }
+    li { margin: 0.3rem 0; }
+    code { background: #f6f6f6; padding: 0 0.3rem; }
+  </style>
+</head>
+<body>
+  <h1>CCSA HW5</h1>
+
+  <form id="nameForm">
+    <input id="nameInput" placeholder="Enter a name (<= 50 chars)" maxlength="50" />
+    <button type="submit">Add</button>
+  </form>
+
+  <h2>Stored names</h2>
+  <ul id="names"></ul>
+
+  <script>
+    const list = document.getElementById('names');
+    const input = document.getElementById('nameInput');
+    const form = document.getElementById('nameForm');
+
+    async function refresh() {
+      const res = await fetch('/api/names');
+      const data = await res.json();
+      list.innerHTML = '';
+      data.forEach(row => {
+        const li = document.createElement('li');
+        li.textContent = `${row.name} (created_at: ${row.created_at}) `;
+        const btn = document.createElement('button');
+        btn.textContent = 'Delete';
+        btn.onclick = async () => {
+          await fetch(`/api/names/${row.id}`, { method: 'DELETE' });
+          await refresh();
+        };
+        li.appendChild(btn);
+        list.appendChild(li);
+      });
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = input.value.trim();
+      if (!name) { alert('Name cannot be empty.'); return; }
+      const res = await fetch('/api/names', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ name })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || 'Error');
+      } else {
+        input.value = '';
+        await refresh();
+      }
+    });
+
+    refresh();
+  </script>
+</body>
+</html>
