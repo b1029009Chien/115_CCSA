@@ -14,6 +14,55 @@ Prerequisites
 - kubectl (locally) or access to the control plane node that has `/etc/rancher/k3s/k3s.yaml` available.
 - (Optional) SSH access to the lab node if you plan to use a hostPath PV.
 
+Joining a lab node (k3s agent) — via Tailscale or direct network
+---------------------------------------------------------------
+If you want the lab host to be part of the k3s cluster (so the Postgres `hostPath` can be mounted there) add it as a k3s agent. The examples below assume you already have Tailscale running on both machines; use the Tailscale IP of the control-plane when joining if the hosts are on different private networks.
+
+Steps (safe, ordered):
+
+1. On the control-plane (where k3s server runs) get the k3s join token and the address you will use for K3S_URL:
+
+```bash
+# control-plane: get the server node-token (treat as secret)
+sudo cat /var/lib/rancher/k3s/server/node-token
+
+# control-plane: show Tailscale IP (if using Tailscale)
+# install tailscale and run `tailscale up` on both machines first
+tailscale ip -4
+```
+
+2. On the lab host (replace <CONTROL_PLANE_IP> and <NODE_TOKEN> with the values above):
+
+```bash
+# quick connectivity test from the lab host to the control-plane API
+curl -k --connect-timeout 5 https://<CONTROL_PLANE_IP>:6443/healthz || echo "control-plane not reachable"
+
+# join the cluster (runs k3s agent installer)
+curl -sfL https://get.k3s.io | K3S_URL=https://<CONTROL_PLANE_IP>:6443 K3S_TOKEN=<NODE_TOKEN> sh -
+```
+
+Notes:
+- If the control-plane and lab host are on the same LAN you can use the LAN IP instead of the Tailscale IP.
+- The join token is sensitive; avoid exposing it in logs or public places.
+
+3. After the join finishes, back on the control-plane (or wherever kubectl is configured) verify the node appears and add the `role=db` label so the DB pod schedules there:
+
+```bash
+sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl get nodes -o wide
+sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl label node <LAB_NODE_NAME> role=db
+```
+sudo systemctl stop k3s
+4. Prepare the hostPath directory on the lab node (create it before creating the PV so it exists when Kubernetes schedules the pod):
+
+```bash
+# on the lab node
+sudo mkdir -p /var/lib/hw6-postgres
+sudo chown -R 999:999 /var/lib/hw6-postgres
+sudo chmod 700 /var/lib/hw6-postgres
+```
+
+If you prefer NOT to add the lab host to the cluster, you can instead point the in-cluster API at the external Postgres service on the lab host (see the "Connect API to external DB" notes later in this README).
+
 What is included
 -----------------
 Files under `HW6/content/k3s/`:
@@ -26,25 +75,6 @@ Files under `HW6/content/k3s/`:
 Step-by-step quickstart (recommended)
 ------------------------------------
 Follow these steps in order. Commands assume you run them from the repo root.
-
-1) (Optional) Label the lab node that should host Postgres
-
-If you already have a node dedicated to the lab DB, label it (replace the node name shown by `kubectl get nodes -o wide`):
-
-```bash
-# find node name and label it (run where kubectl works)
-kubectl get nodes -o wide
-kubectl label node <lab-node-name> role=db
-```
-
-2) Create the data directory on the lab host (only if you use the provided hostPath PV)
-
-SSH into the lab node and run:
-
-```bash
-sudo mkdir -p /var/lib/hw6-postgres
-sudo chown 999:999 /var/lib/hw6-postgres   # optional: make Postgres owner (UID 999 in official image)
-```
 
 3) Apply the namespace and the DB PV/PVC first (ensures the DB will bind to the hostPath)
 
